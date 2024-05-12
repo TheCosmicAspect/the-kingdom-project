@@ -5,11 +5,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length, EqualTo, Email
 from werkzeug.security import generate_password_hash, check_password_hash
-import email_validator
 from flask_migrate import Migrate
-from flask_mail import Mail, Message
-from itsdangerous import URLSafeTimedSerializer
-
 
 
 app = Flask(__name__)
@@ -24,35 +20,6 @@ login_manager.init_app(app)
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
-# =========================================================== #
-# -=-=-=-=-=-=-=-=-=-=- M A I L T R A P -=-=-=-=-=-=-=-=-=-=- #
-# =========================================================== #
-
-app.config['MAIL_SERVER']='live.smtp.mailtrap.io'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USERNAME'] = 'api'
-app.config['MAIL_PASSWORD'] = 'd56fad8871024a1779ff73dd64db1276'
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USE_SSL'] = False
-
-mail = Mail(app)
-
-def generate_confirmation_token(email):
-    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-    return serializer.dumps(email)
-
-def send_confirmation_email(email, token):
-    confirm_url = url_for('confirm_email', token=token, _external=True)
-    msg = Message('Please Confirm Your Email',
-                 sender=app.config['MAIL_USERNAME'],
-                 recipients=[email])
-    msg.body = f'''To confirm your email, visit the following link:
-{confirm_url}
-If you did not make this request, simply ignore this email.
-'''
-    mail.send(msg)
-
 
 
 # =========================================================== #
@@ -184,33 +151,8 @@ def signup():
         db.session.add(new_user)
         db.session.commit()
 
-        token = generate_confirmation_token(new_user.email)
-        send_confirmation_email(new_user.email, token)
-
-        flash('A confirmation email has been sent to your email address.', 'info')
         return redirect(url_for('login'))
     return render_template('signup.html', form=form)
-
-# Email confirmation (A sacrament)
-@app.route('/confirm/<token>', methods=['GET', 'POST'])
-def confirm_email(token):
-    try:
-        email = URLSafeTimedSerializer(app.config['SECRET_KEY']).loads(token, max_age=3600)
-    except:
-        flash('The confirmation link is invalid or has expired.', 'danger')
-        return redirect(url_for('index'))
-
-    user = User.query.filter_by(email=email).first()
-
-    if user.confirmed:
-        flash('Email already confirmed.', 'info')
-    else:
-        user.confirmed = True
-        db.session.add(user)
-        db.session.commit()
-        flash('Your email has been confirmed! You can now log in.', 'success')
-
-    return redirect(url_for('login'))
 
 # Main
 if __name__ == '__main__':
