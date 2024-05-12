@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Title</title>
+</head>
+<body>
+    <h1>Title</h1>
+    <ul>
+        {% for page in pages %}
+            <li><a href="{{ url_for('page', page_id=page.id) }}">{{ page.title }}</a></li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('create') }}">Create a new page</a>
+</body>
+</html>

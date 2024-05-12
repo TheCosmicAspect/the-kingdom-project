@@ -1,0 +1,12 @@
+<div>
+	{{ page.title }}
+</div>
+<!-- Display the page content as HTML -->
+<div>
+    {{ page.content }}
+</div>
+
+<a href="{{ url_for('edit', page_id=page.id) }}">Edit</a>
+<form action="{{ url_for('delete', page_id=page.id) }}" method="post">
+    <input type="submit" value="Delete Page">
+</form>
