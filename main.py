@@ -6,11 +6,13 @@ from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length, EqualTo, Email
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///temp.db'
-app.config['SECRET_KEY'] = 'your-secret-key' # Replace with your actual secret key
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
