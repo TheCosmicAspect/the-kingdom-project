@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>The Kingdom Project</title>
+	<link rel="stylesheet" type="text/css" href="../static/css/main.css" />
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Mukta&family=Sedan+SC&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+<header id="navbar">
+	<nav class="navbar-container container sedan-sc">
+	  <a href="{{ url_for('index') }}" class="home-link">
+		<div class="navbar-title">TKP</div>
+	  </a>
+	  <button
+		type="button"
+		id="navbar-toggle"
+		aria-controls="navbar-menu"
+		aria-label="Toggle menu"
+		aria-expanded="false"
+	  >
+		<span class="icon-bar"></span>
+		<span class="icon-bar"></span>
+		<span class="icon-bar"></span>
+	  </button>
+	  <div id="navbar-menu" aria-labelledby="navbar-toggle">
+		<ul class="navbar-links">
+		  <li class="navbar-item {% block mission_class %}{% endblock %}"><a class="navbar-link" href="">Mission</a></li>
+		  <li class="navbar-item {% block theology_class %}{% endblock %}"><a class="navbar-link" href="">Theology</a></li>
+		  <li class="navbar-item {% block articles_class %}{% endblock %}"><a class="navbar-link" href="">Articles</a></li>
+		  <li class="navbar-item {% block contact_class %}{% endblock %}"><a class="navbar-link" href="">Contact</a></li>
+		</ul>
+	  </div>
+	</nav>
+  </header>
+ <script src="../static/js/nav.js"></script>
+
+{% block content %}
+{% endblock %}
+
+</body>
+</html>
