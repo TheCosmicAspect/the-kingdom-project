@@ -1,7 +1,12 @@
+/* ------------------------------------------- */
+/* ----------------- R O O T ----------------- */
+/* ------------------------------------------- */
+
 :root {
 	--bg-color: #252525;
-	--navbar-text-color: #ffffff;
-	--navbar-text-color-focus: #dddddd;
+	--bg-alt-color: #dedede;
+	--main-text-color: #ffffff;
+	--muted-text-color: #dddddd;
 	--accent-color: #ea3e3e;
 }
 
@@ -15,6 +20,7 @@ body {
 	height: 100vh;
 	line-height: 1.6;
 	background-color: var(--bg-color);
+	color: var(--main-text-color)
 }
 
 .sedan-sc {
@@ -27,7 +33,15 @@ body {
 	font-family: "Mukta", sans-serif;
 	font-weight: 400;
 	font-style: normal;
-}  
+} 
+
+.accentcolor {
+	color: var(--accent-color);
+}
+
+/* ------------------------------------------- */
+/* --------------- N A V B A R --------------- */
+/* ------------------------------------------- */
 
 .container {
 	max-width: 90%;
@@ -63,7 +77,7 @@ body {
   
 .home-link,
 .navbar-link {
-	color: var(--navbar-text-color);
+	color: var(--main-text-color);
 	text-decoration: none;
 	display: flex;
 	font-weight: 400;
@@ -76,7 +90,7 @@ body {
 }
 
 .home-link:is(:focus, :hover) {
-	color: var(--navbar-text-color-focus);
+	color: var(--muted-text-color);
 }
   
 .navbar-link {
@@ -91,7 +105,7 @@ body {
 }
   
 .navbar-link:is(:focus, :hover) {
-	color: var(--navbar-text-color-focus);
+	color: var(--muted-text-color);
 	background-color: var(--navbar-bg-contrast);
 }
 
@@ -112,12 +126,12 @@ body {
 	width: 25px;
 	height: 3px;
 	margin: 2px;
-	background-color: var(--navbar-text-color);
+	background-color: var(--main-text-color);
 	border-radius: 5px;
 }
   
 #navbar-toggle:is(:focus, :hover) .icon-bar {
-	background-color: var(--navbar-text-color-focus);
+	background-color: var(--muted-text-color);
 }
 
 #navbar-toggle[aria-expanded='true'] .icon-bar:is(:first-child, :last-child) {
@@ -202,7 +216,7 @@ body {
 	}
 
 	.home-link {
-		border-right: var(--navbar-text-color) 2px solid;
+		border-right: var(--main-text-color) 2px solid;
 	}
 
 	#navbar {
@@ -214,6 +228,57 @@ body {
 
 	.navbar-title {
 		padding: 0.4em 1.2em;
+	}
+
+}
+
+/* ------------------------------------------- */
+/* ---------------- I N D E X ---------------- */
+/* ------------------------------------------- */
+
+#actionpage {
+	height: 100vh;
+	padding-top: 5em;
+	display: flex;
+	flex-direction: column;
+}
+
+.actiontitle, .actionverse {
+	width: 100%;
+	padding-top: 20%;
+}
+
+.actiontitle {
+	font-size: 3em;
+	padding-left: 7%;
+}
+
+.actionverse {
+	color: var(--muted-text-color);
+}
+
+#missionblurb {
+	min-height: 80vh;
+	background-color: var(--bg-alt-color);
+}
+
+#index-recentarticles {
+	min-height: 50vh;
+	background-color: var(--bg-color);
+}
+
+@media screen and (min-width: 900px) {
+
+	#actionpage {
+		flex-direction: row;
+	}
+
+	.actiontitle {
+		width: 65%;
+	}
+
+	.actionverse {
+		width: 35%;
 	}
 
 }
