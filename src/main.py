@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
 from flask_sqlalchemy import SQLAlchemy
@@ -12,7 +13,7 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///temp.db'
+app.config.from_pyfile('config.py')
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
@@ -28,25 +29,31 @@ def load_user(user_id):
 # -=-=-=-=-=-=-=-=-=-=-=- M O D E L S -=-=-=-=-=-=-=-=-=-=-=- #
 # =========================================================== #
 
-class Rank(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True)
-
-    def __repr__(self):
-        return '<Rank %r>' % self.name
-
-user_rank_association = db.Table('user_rank',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-    db.Column('rank_id', db.Integer, db.ForeignKey('rank.id'), primary_key=True)
-)
-
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True)
-    email = db.Column(db.String(100), unique=True)
-    password = db.Column(db.String(100))
-    ranks = db.relationship('Rank', secondary=user_rank_association, backref=db.backref('users', lazy='dynamic'))
-    confirmed = db.Column(db.Boolean, default=False)
+    username = db.Column(db.String(100), nullable=False, unique=True)
+    display_name = db.Column(db.String(100))
+    email = db.Column(db.String(100), nullable=False, unique=True)
+    password = db.Column(db.String(100), nullable=False)
+    created_on = db.Column(db.DateTime, nullable=False)
+    is_confirmed = db.Column(db.Boolean, nullable=False, default=False)
+    is_admin = db.Column(db.Boolean, nullable=False, default=False)
+    is_theologian = db.Column(db.Boolean, nullable=False, default=False)
+    is_writer = db.Column(db.Boolean, nullable=False, default=False)
+    is_historian = db.Column(db.Boolean, nullable=False, default=False)
+
+    def __init__(
+        self, username, email, password, is_confirmed=False, is_admin=False, is_theologian=False, is_writer=False, is_historian=False 
+    ):
+        self.username = username
+        self.email = email
+        self.password = generate_password_hash(password, method='pbkdf2:sha256')
+        self.created_on = datetime.now()
+        self.is_confirmed = is_confirmed
+        self.is_admin = is_admin
+        self.is_theologian = is_theologian
+        self.is_writer = is_writer
+        self.is_historian = is_historian
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -79,7 +86,7 @@ class SignupForm(FlaskForm):
 @app.route('/')
 def index():
     pages = Page.query.all()
-    return render_template('index.html', pages=pages)
+    return render_template('core/index.html', pages=pages)
 
 # Create page
 @app.route('/create', methods=['GET', 'POST'])
@@ -92,13 +99,13 @@ def create():
         db.session.add(page)
         db.session.commit()
         return redirect(url_for('page', page_id=page.id))
-    return render_template('create.html')
+    return render_template('pages/create.html')
 
 # Page
 @app.route('/<int:page_id>')
 def page(page_id):
     page = Page.query.get_or_404(page_id)
-    return render_template('page.html', page=page)
+    return render_template('pages/page.html', page=page)
 
 # Edit
 @app.route('/edit/<int:page_id>', methods=['GET', 'POST'])
@@ -109,8 +116,8 @@ def edit(page_id):
         page.title = request.form['title']
         page.content = request.form['content']
         db.session.commit()
-        return redirect(url_for('page', page_id=page.id))
-    return render_template('edit.html', page=page)
+        return redirect(url_for('pages/page', page_id=page.id))
+    return render_template('core/edit.html', page=page)
 
 # Delete
 @app.route('/delete/<int:page_id>', methods=['POST'])
@@ -119,7 +126,7 @@ def delete(page_id):
     page = Page.query.get_or_404(page_id)
     db.session.delete(page)
     db.session.commit()
-    return redirect(url_for('index')) # Redirect to the index page after deletion
+    return redirect(url_for('core/index')) # Redirect to the index page after deletion
 
 # Login
 @app.route('/login', methods=['GET', 'POST'])
@@ -131,30 +138,29 @@ def login():
         if user and check_password_hash(user.password, password):
             login_user(user)
             flash('You have been logged in!', 'success')
-            return redirect(url_for('index'))
+            return redirect(url_for('core/index'))
         else:
             flash('Login unsuccessful. Please check username and password', 'danger')
-    return render_template('login.html')
+    return render_template('accounts/login.html')
 
 # Logout
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('index'))
+    return redirect(url_for('core/index'))
 
 # Signup
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = SignupForm()
     if form.validate_on_submit():
-        hashed_password = generate_password_hash(form.password.data, method='pbkdf2:sha256')
-        new_user = User(username=form.username.data, password=hashed_password)
+        new_user = User(username=form.username.data, email=form.email.data, password=form.password.data)
         db.session.add(new_user)
         db.session.commit()
 
         return redirect(url_for('login'))
-    return render_template('signup.html', form=form)
+    return render_template('accounts/signup.html', form=form)
 
 # Main
 if __name__ == '__main__':
