@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
+from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user, login_required
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
@@ -8,7 +8,8 @@ from wtforms.validators import DataRequired, Length, EqualTo, Email
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 from dotenv import load_dotenv
-import os
+from utils.decorators import logout_required
+from flask_mail import Mail
 
 load_dotenv()
 
@@ -17,6 +18,7 @@ app.config.from_pyfile('config.py')
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+mail = Mail(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -130,6 +132,7 @@ def delete(page_id):
 
 # Login
 @app.route('/login', methods=['GET', 'POST'])
+@logout_required
 def login():
     if request.method == 'POST':
         username = request.form.get('username')
@@ -152,15 +155,46 @@ def logout():
 
 # Signup
 @app.route('/signup', methods=['GET', 'POST'])
+@logout_required
 def signup():
+    from utils.email import send_email
+    from accounts.token import confirm_token, generate_token
     form = SignupForm()
     if form.validate_on_submit():
         new_user = User(username=form.username.data, email=form.email.data, password=form.password.data)
         db.session.add(new_user)
         db.session.commit()
 
+        token = generate_token(new_user.email)
+        confirm_url = url_for("confirm_email", token=token, _external=True)
+        html = render_template("accounts/confirm_email.html", confirm_url=confirm_url)
+        subject = "Please confirm your email"
+        send_email(new_user.email, subject, html)
+
+        login_user(new_user)
+
+        flash("A confirmation email has been sent via email.", "success")
         return redirect(url_for('login'))
     return render_template('accounts/signup.html', form=form)
+
+# Confirm email
+@app.route("/confirm/<token>")
+@login_required
+def confirm_email(token):
+    from accounts.token import confirm_token, generate_token
+    if current_user.is_confirmed:
+        flash("Account already confirmed.", "success")
+        return redirect(url_for("core.home"))
+    email = confirm_token(token)
+    user = User.query.filter_by(email=current_user.email).first_or_404()
+    if user.email == email:
+        user.is_confirmed = True
+        db.session.add(user)
+        db.session.commit()
+        flash("You have confirmed your account. Thanks!", "success")
+    else:
+        flash("The confirmation link is invalid or has expired.", "danger")
+    return redirect(url_for("core.home"))
 
 # Main
 if __name__ == '__main__':
